@@ -183,7 +183,7 @@ public class PlayerController : MonoBehaviour {
         float distanceToPoint = capsuleCol.height / 2 - capsuleCol.radius;
         Vector3 point1 = capsuleCol.center + Vector3.up * distanceToPoint;
         Vector3 point2 = capsuleCol.center - Vector3.up * distanceToPoint;
-        float radius = capsuleCol.radius * 0.95f;
+        float radius = capsuleCol.radius * 1f;
         int num = Physics.OverlapCapsuleNonAlloc(point1 + transform.position, point2 + transform.position, radius, overlaps, notPlayerMask, QueryTriggerInteraction.UseGlobal);
         
         int num2 = Physics.CapsuleCastNonAlloc(point1 + transform.position, point2 + transform.position, radius, transform.forward, hits, movementSpeed, notPlayerMask, QueryTriggerInteraction.UseGlobal);
@@ -212,8 +212,7 @@ public class PlayerController : MonoBehaviour {
                 Vector3 penetrationVec = dir * dist;
                 Vector3 velocityProjected = Vector3.Project(velocity, -dir);
                 transform.position = transform.position + penetrationVec;
-                //vel -= velocityProjected;
-                vel = Vector3.zero;
+                vel -= velocityProjected;
             }
         }
     }
