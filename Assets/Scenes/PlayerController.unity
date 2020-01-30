@@ -1118,7 +1118,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d9b225bbe6c3d14283e41767fa1ea42, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  allButPlayer:
+    serializedVersion: 2
+    m_Bits: 55
   movementSpeed: 10
+  toggleGravity: 1
+  gravityValue: -9.81
+  initialGravityStart: -20
+  _camera: {fileID: 963194228}
 --- !u!136 &1152510556
 CapsuleCollider:
   m_ObjectHideFlags: 0
