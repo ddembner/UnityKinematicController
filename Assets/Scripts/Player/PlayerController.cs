@@ -110,7 +110,7 @@ public class PlayerController : MonoBehaviour {
     private void Gravity() {
 
         if (grounded == false) {
-            currentGravity -= gravity * movementSpeed * Time.deltaTime;
+            currentGravity -= gravity * Time.deltaTime;
             currentGravity = Mathf.Clamp(currentGravity, -maxGravity, maxGravity);
         }
         else {

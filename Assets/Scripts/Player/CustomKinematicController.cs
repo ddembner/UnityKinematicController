@@ -9,6 +9,7 @@ public class CustomKinematicController : MonoBehaviour {
 
     [Header("Movement Options")]
     [SerializeField] private float movementSpeed = 10f;
+    private Vector3 simpleMove;
     private Vector3 velocity;
 
     [Header("Gravity options")]
@@ -30,14 +31,23 @@ public class CustomKinematicController : MonoBehaviour {
         
     }
 
-    // Update is called once per frame
+    /*
+     * Steps for movements
+     * 1. Update Gravity
+     * 2. Get Inputs
+     * 3. Cast Ray to solve for high speed move and reduce move magnitude to equal ray distance
+     * 4. Get External Forces (optional forces such as knockback and friction)
+     * 5. Update Final Velocity
+     * 6. Colllsion Resolver
+     * 7. Ground Check
+    */
     void Update() {
         Gravity();
-        Move();
+        FinalMove();
         GroundCheck();
     }
 
-    private void Move() {
+    private void FinalMove() {
 
         float horizontal = Input.GetAxis("Horizontal");
         float forward = Input.GetAxis("Vertical");
