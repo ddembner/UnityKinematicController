@@ -41,44 +41,13 @@ public class CustomKinematicController : MonoBehaviour {
      * 6. Colllsion Resolver
      * 7. Ground Check
     */
+
     void Update() {
         Gravity();
+        InputMove();
+        CheckFastMove();
         FinalMove();
         GroundCheck();
-    }
-
-    private void FinalMove() {
-
-        float horizontal = Input.GetAxis("Horizontal");
-        float forward = Input.GetAxis("Vertical");
-
-        Vector3 camForward = _camera.forward;
-        Vector3 camRight = _camera.right;
-        camForward = camForward.normalized;
-        camRight = camRight.normalized;
-
-        camForward.y = 0f;
-        camRight.y = 0f;
-        velocity = horizontal * camRight + velocity.y * Vector3.up + forward * camForward;
-        velocity.x *= movementSpeed;
-        velocity.z *= movementSpeed;
-        //Camera Movement
-
-
-        transform.position += velocity * Time.deltaTime;
-
-        if (velocity != Vector3.zero) {
-            Vector3 velRot = velocity.normalized;
-            velRot.y = 0f;
-
-            if (velRot != Vector3.zero) {
-                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(velRot, transform.up), 0.2f);
-            }
-
-            //transform.rotation = Quaternion.LookRotation(velocity.normalized, transform.up);
-        }
-
-        velocity = Vector3.zero;
     }
 
     private void Gravity() {
@@ -95,7 +64,53 @@ public class CustomKinematicController : MonoBehaviour {
             initialGravityFrame = true;
         }
 
-        velocity.y = currentGravity;
+        simpleMove.y = currentGravity;
+    }
+
+    private void InputMove() {
+
+        float horizontal = Input.GetAxis("Horizontal") * movementSpeed;
+        float forward = Input.GetAxis("Vertical") * movementSpeed;
+
+        Vector3 camForward = _camera.forward;
+        Vector3 camRight = _camera.right;
+        camForward = camForward.normalized;
+        camRight = camRight.normalized;
+
+        camForward.y = 0f;
+        camRight.y = 0f;
+
+        simpleMove = (horizontal * camRight + velocity.y * Vector3.up + forward * camForward) * Time.deltaTime;
+
+    }
+
+    private void CheckFastMove() {
+
+    }
+
+    private void FinalMove() {
+
+
+
+
+        velocity = simpleMove;
+
+
+        transform.position += velocity;
+
+        if (velocity != Vector3.zero) {
+            Vector3 velRot = velocity.normalized;
+            velRot.y = 0f;
+
+            if (velRot != Vector3.zero) {
+                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(velRot, transform.up), 0.2f);
+            }
+
+            //transform.rotation = Quaternion.LookRotation(velocity.normalized, transform.up);
+        }
+
+        simpleMove = Vector3.zero;
+        velocity = Vector3.zero;
     }
 
     private void GroundCheck() {
