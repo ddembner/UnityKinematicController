@@ -206,9 +206,10 @@ public class PlayerController : MonoBehaviour {
             Transform t = overlaps[i].transform;
             Vector3 dir;
             float dist;
-
-            if(Physics.ComputePenetration(capsuleCol, transform.position, transform.rotation, overlaps[i], t.position, t.rotation, out dir, out dist)) {
-
+            
+            if(Physics.ComputePenetration(capsuleCol, transform.TransformPoint(transform.position), transform.rotation, overlaps[i], t.position, t.rotation, out dir, out dist)) {
+                Debug.Log(dir);
+                Debug.Log(dist);
                 Vector3 penetrationVec = dir * dist;
                 Vector3 velocityProjected = Vector3.Project(velocity, -dir);
                 transform.position = transform.position + penetrationVec;

@@ -23,7 +23,11 @@ public class CustomKinematicController : MonoBehaviour {
     [SerializeField] private Transform _camera;
     [SerializeField] private CapsuleCollider capsuleCollider;
 
-    private bool _grounded = false;
+    [Header("Physics Options")]
+    [SerializeField] private Vector3 groundSphereOffset;
+    [SerializeField] private float groundSphereRadius;
+
+    private bool _grounded = true;
     public bool IsGrounded { get { return _grounded; } }
 
     // Start is called before the first frame update
@@ -45,9 +49,10 @@ public class CustomKinematicController : MonoBehaviour {
     void Update() {
         Gravity();
         InputMove();
-        CheckFastMove();
+        ContinuousCollisionDetection();
         FinalMove();
         GroundCheck();
+        //CollisionResolver();
     }
 
     private void Gravity() {
@@ -80,12 +85,32 @@ public class CustomKinematicController : MonoBehaviour {
         camForward.y = 0f;
         camRight.y = 0f;
 
-        simpleMove = (horizontal * camRight + velocity.y * Vector3.up + forward * camForward) * Time.deltaTime;
+        simpleMove = (horizontal * camRight + simpleMove.y * Vector3.up + forward * camForward) * Time.deltaTime;
 
     }
 
-    private void CheckFastMove() {
+    private void ContinuousCollisionDetection() {
 
+        Vector3 movement = simpleMove;
+        Ray ray = new Ray(transform.position, movement.normalized);
+        RaycastHit[] rayHits = new RaycastHit[8];
+
+        float distanceToPoint = capsuleCollider.height / 2 - capsuleCollider.radius;
+        Vector3 point1 = (capsuleCollider.center + Vector3.up * distanceToPoint) + transform.position;
+        Vector3 point2 = (capsuleCollider.center - Vector3.up * distanceToPoint) + transform.position;
+        float radius = capsuleCollider.radius;
+
+        int num = Physics.CapsuleCastNonAlloc(point1, point2, radius, movement.normalized, rayHits, 20f, allButPlayer, QueryTriggerInteraction.UseGlobal);
+        Debug.Log(num);
+        for(int i = 0; i < num; i++) {
+
+            if (rayHits[i].collider.isTrigger) {
+                continue;
+            }
+
+            Debug.Log(rayHits[i].distance);
+            
+        }
     }
 
     private void FinalMove() {
@@ -113,9 +138,41 @@ public class CustomKinematicController : MonoBehaviour {
         velocity = Vector3.zero;
     }
 
+    private void CollisionResolver() {
+
+        float distanceToPoint = capsuleCollider.height / 2 - capsuleCollider.radius;
+        Vector3 point1 = (capsuleCollider.center + Vector3.up * distanceToPoint) + transform.position;
+        Vector3 point2 = (capsuleCollider.center - Vector3.up * distanceToPoint) + transform.position;
+        float radius = capsuleCollider.radius;
+
+        Collider[] collisions = new Collider[5];
+        int numCollision = Physics.OverlapCapsuleNonAlloc(point1, point2, radius, collisions, allButPlayer, QueryTriggerInteraction.UseGlobal);
+
+
+        for(int i = 0; i < numCollision; i++) {
+
+            //We don't care about trigger collisions 
+            if (collisions[i].isTrigger) {
+                continue;
+            }
+
+            Transform colTransform = collisions[i].transform;
+            Vector3 dir;
+            float distance;
+
+            if(Physics.ComputePenetration(capsuleCollider, transform.position, transform.rotation, collisions[i], colTransform.position, colTransform.rotation, out dir, out distance)) {
+
+                transform.position += dir * distance;
+
+            }
+        }
+        
+    }
+
     private void GroundCheck() {
 
         //TODO: Predict if will hit ground and act accordingly
+        /*
         float distanceToPoint = capsuleCollider.height / 2 - capsuleCollider.radius;
         Vector3 point1 = (capsuleCollider.center + Vector3.up * distanceToPoint) + transform.position;
         Vector3 point2 = (capsuleCollider.center - Vector3.up * distanceToPoint) + transform.position;
@@ -126,6 +183,26 @@ public class CustomKinematicController : MonoBehaviour {
         else {
             _grounded = false;
         }
+        */
+
+        //Determine max number of wanted collisions to be stored
+        Collider[] groundCollisions = new Collider[3];
+        int num = Physics.OverlapSphereNonAlloc(transform.position + groundSphereOffset, groundSphereRadius, groundCollisions, allButPlayer, QueryTriggerInteraction.UseGlobal);
+        //From here we can use the number of collisions to determine individually what should happen at this point of the frame.
+        
+        if(num > 0) {
+            _grounded = true;
+        }
+        else {
+            _grounded = false;
+        }
+
+    }
+
+    private void OnDrawGizmos() {
+        Gizmos.color = Color.magenta;
+
+        Gizmos.DrawWireSphere(transform.position + groundSphereOffset, groundSphereRadius);
     }
 
 }
