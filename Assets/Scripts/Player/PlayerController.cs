@@ -220,7 +220,7 @@ public class PlayerController : MonoBehaviour {
 
     private void OnDrawGizmos() {
         Gizmos.color = Color.cyan;
-        Gizmos.DrawSphere(transform.TransformPoint(groundCheckPoint), sphereCheckRadius);
+        //Gizmos.DrawSphere(transform.TransformPoint(groundCheckPoint), sphereCheckRadius);
     }
 
     private void CanMove(Vector3 dir) {

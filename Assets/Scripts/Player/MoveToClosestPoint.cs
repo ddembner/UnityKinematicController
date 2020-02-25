@@ -29,9 +29,16 @@ public class MoveToClosestPoint : MonoBehaviour {
         closestPoint = FindClosestPoint();
 
         if (Input.GetKeyDown(KeyCode.Space)) {
-            transform.position = closestPoint + pointDir;
+
+            //transform.position = closestPoint + pointDir * (capsuleCollider.radius + Vector3.Dot(Vector3.Normalize(clostPointOnCapsule - moveToSphere.position), moveToSphere.up));
+            Vector3 normalVec = Vector3.Normalize(clostPointOnCapsule - moveToSphere.position);
+            float dot = Vector3.Dot(normalVec, moveToSphere.up);
+            transform.position = closestPoint + pointDir * (capsuleCollider.radius + (dot * capsuleCollider.radius));
+            if(transform.position.x < 0.0000001f || transform.position.x > -0.0000001f) {
+                transform.position = new Vector3(0f, transform.position.y, transform.position.z);
+            }
         }
-        Debug.Log(Vector3.Dot(Vector3.Normalize(transform.position - moveToSphere.position), moveToSphere.up));
+        //Debug.Log(Vector3.Dot(Vector3.Normalize(clostPointOnCapsule - moveToSphere.position), moveToSphere.up));
     }
 
     Vector3 FindClosestPoint() {

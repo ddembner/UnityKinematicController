@@ -48,6 +48,7 @@ public class CustomKinematicController : MonoBehaviour {
     Vector3 point1;
     Vector3 point2;
     float radius;
+    float groundAngle = 0f;
     Vector3 closestPoint;
 
     // Start is called before the first frame update
@@ -70,16 +71,19 @@ public class CustomKinematicController : MonoBehaviour {
      * 8. Ground Check
     */
 
+    int frame = 0;
     void Update() {
+        frame++;
         Gravity();
         InputMove();
         //ContinuousCollisionDetection();
         FinalMove();
         DecreaseForce();
         GroundCheck();
+        GetGroundAngle();
         Touch();
-        CollisionResolver();
-        Debug.Log(force.magnitude);
+        //CollisionResolver();
+        //Debug.Log("Frame: " + frame);
     }
 
     private void Gravity() {
@@ -137,45 +141,8 @@ public class CustomKinematicController : MonoBehaviour {
 
     private void ContinuousCollisionDetection() {
 
-        Vector3 movement = simpleMove;
-        Ray ray = new Ray(transform.position, movement.normalized);
-        RaycastHit[] rayHits = new RaycastHit[8];
-
-        int num = Physics.CapsuleCastNonAlloc(point1 + transform.position, point2 + transform.position, radius, movement.normalized, rayHits, movement.magnitude, allButPlayer, QueryTriggerInteraction.UseGlobal);
-
-        for(int i = 0; i < num; i++) {
-
-            //if (rayHits[i].collider.isTrigger) {
-            //    continue;
-            //}
-
-            ////float pointHeight = rayHits[i].point.y - rayHits[i].collider.bounds.size.y;
-
-            ////if(pointHeight < stepOffset) {
-            ////    Debug.LogError("poooooooooop");
-            ////    simpleMove.y += rayHits[i].point.y;
-            ////}
-            //if(rayHits[i].distance < 0.0001f) { //Is the number so small that is it worth moving?
-            //    simpleMove = Vector3.zero;
-            //}
-            //else if (simpleMove.magnitude * Time.deltaTime > rayHits[i].distance) {
-            //    transform.position = rayHits[i].point + capsuleCollider.center;
-            //    //transform.position += capsuleCollider.radius * rayHits[i].normal;
-            //    Debug.Log("Capsule Center" + capsuleCollider.center);
-            //    Debug.Log("simplemove normal: " + simpleMove.normalized);
-            //    Debug.LogError("Oops");
-            //    Debug.Log("point normal: " + rayHits[i].point.normalized);
-            //    Debug.Log("collision normal: " + rayHits[i].normal);
-
-            //    simpleMove = Vector3.zero;
-            //}
-            //else {
-                //Move normally
-                simpleMove = simpleMove.normalized * simpleMove.magnitude;
-            //}
-            
-            
-        }
+        simpleMove = simpleMove.normalized * simpleMove.magnitude;    
+        
     }
 
     private void FinalMove() {
@@ -249,36 +216,54 @@ public class CustomKinematicController : MonoBehaviour {
 
     }
 
+    RaycastHit groundHit;
+    Vector3 hitLocation;
+    private void GetGroundHitLoc() {
+
+        if(Physics.Raycast(transform.position, -transform.up, out groundHit, 2f, allButPlayer)){
+            hitLocation = groundHit.point;
+        }
+
+        Debug.Log(hitLocation);
+    }
+
     private void GroundCheck() {
 
-        //Determine max number of wanted collisions to be stored
-        RaycastHit[] groundCollisions = new RaycastHit[3];
-        int num = Physics.SphereCastNonAlloc(transform.position + groundSphereOffset, groundSphereRadius, Vector3.down, groundCollisions, groundSphereCastDist, allButPlayer, QueryTriggerInteraction.UseGlobal);
-        //From here we can use the number of collisions to determine individually what should happen at this point of the frame.
-
         _grounded = false;
+        Collider[] groundCollisions = Physics.OverlapSphere(transform.position + groundSphereOffset, groundSphereRadius, allButPlayer, QueryTriggerInteraction.Collide);
 
-        for(int i = 0; i < num; i++) {
-            if (groundCollisions[i].collider.isTrigger) {
-                continue;
-            }
-            closestPoint = Physics.ClosestPoint(groundCollisions[i].point, capsuleCollider, transform.position, transform.rotation);
-            //transform.position = new Vector3(transform.position.x, (groundCollisions[i].point.y + capsuleCollider.height / 2), transform.position.z);
+        for(int i = 0; i < groundCollisions.Length; i++) {
 
-            //This gets the angle of a slope that the player is standing on
-            //float slope = Mathf.Round(Vector3.Angle(transform.up, groundCollisions[i].normal));
-
+            //This is where to check if certain colliders should be ignored
+            if (groundCollisions[i].isTrigger) continue;
             _grounded = true;
             break;
+        }
+
+        GetGroundHitLoc();
+
+    }
+
+    private void GetGroundAngle() {
+
+        //No point in getting angle if not grounded
+        if (!_grounded) return;
+
+        RaycastHit rayHit = new RaycastHit();
+        if(Physics.Raycast(transform.position, -transform.up * (capsuleCollider.height / 2), out rayHit, allButPlayer)){
+
+            groundAngle = Vector3.Angle(rayHit.normal, transform.up);
+            Debug.Log(groundAngle);
         }
 
     }
 
     private void OnDrawGizmos() {
-        Gizmos.color = Color.magenta;
+        Gizmos.color = Color.blue;
 
         Gizmos.DrawWireSphere(transform.position + groundSphereOffset, groundSphereRadius);
-        Gizmos.DrawSphere(closestPoint, 0.5f);
+
+        Gizmos.color = Color.yellow;
     }
 
 }
